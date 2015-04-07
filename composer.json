@@ -1,0 +1,36 @@
+{
+    "name": "holisticagency/satis-http-client",
+    "description": "Dedicated http client for satis deployment",
+    "require": {
+        "guzzlehttp/guzzle": "~5.2",
+        "symfony/finder": "~2.2"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "~4.5",
+        "mikey179/vfsStream": "~1.5"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Gil",
+            "email": "gillesodret@users.noreply.github.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "holisticagency\\satis\\utilities\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "holisticagency\\satis\\Test\\": "tests/"
+        }
+    },
+    "homepage": "https://github.com/holisticagency/satis-http-client",
+    "keywords": ["composer", "satis", "http", "deployment"],
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0.x-dev"
+        }
+    }
+}
