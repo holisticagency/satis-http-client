@@ -2,6 +2,7 @@
     "name": "holisticagency/satis-http-client",
     "description": "Dedicated http client for satis deployment",
     "require": {
+        "php": ">=5.4.0",
         "guzzlehttp/guzzle": "~5.2",
         "symfony/finder": "~2.2"
     },
