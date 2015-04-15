@@ -32,7 +32,7 @@ class SatisHttpServerInfo
      *
      * @var bool
      */
-    private $needAuthentication = true;
+    private $needAuthentication = false;
 
     /**
      * List of file extensions allowed to PUT.

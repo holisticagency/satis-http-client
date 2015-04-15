@@ -14,6 +14,7 @@ namespace holisticagency\satis\Test;
 use PHPUnit_Framework_TestCase;
 use GuzzleHttp\Subscriber\Mock;
 use holisticagency\satis\utilities\SatisHttpClient;
+use holisticagency\satis\utilities\SatisHttpServerInfo;
 use GuzzleHttp\Message\Response;
 use GuzzleHttp\Stream\Stream;
 use org\bovigo\vfs\vfsStream;
@@ -85,8 +86,22 @@ EOT
         );
 
         $this->client = new SatisHttpClient('http://localhost:54715');
-        $this->clientwithcreds1 = new SatisHttpClient('http://localhost/withpath/', array('user', 'pass'));
-        $this->clientwithcreds2 = new SatisHttpClient('https://user:pass@localhost/withpath/');
+        $server = new SatisHttpServerInfo();
+        $server->setNeedAuthentication(true);
+        $this->clientwithcreds1 = new SatisHttpClient('http://localhost/withpath/', array('user', 'pass'), $server);
+        $this->clientwithcreds2 = new SatisHttpClient('https://user:pass@localhost/withpath/', null, $server);
+    }
+
+    /**
+     * @expectedException     Exception
+     * @expectedExceptionCode 4
+     */
+    public function testMisconfiguredHttpServer()
+    {
+        $server = new SatisHttpServerInfo();
+        $server->setNeedAuthentication(true);
+
+        $this->client = new SatisHttpClient('http://localhost:54715', null, $server);
     }
 
     /**

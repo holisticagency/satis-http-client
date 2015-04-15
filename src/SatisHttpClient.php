@@ -66,20 +66,27 @@ class SatisHttpClient extends Client
      */
     private $lastBody;
 
+    /**
+     * Satis Http Server Informations.
+     *
+     * @var SatisHttpServerInfo
+     */
     private $httpServer;
 
     /**
      * Constructor.
      *
-     * @param string     $homepage    satis repository url
-     * @param array|null $credentials Credentials (user, pass)
+     * @param string                   $homepage    satis repository url
+     * @param array|null               $credentials Credentials (user, pass)
+     * @param SatisHttpServerInfo|null $httpServer  Satis Http Server Informations
      */
-    public function __construct($homepage, array $credentials = null)
+    public function __construct($homepage, array $credentials = null, SatisHttpServerInfo $httpServer = null)
     {
         $this->setCredentials($credentials);
         $this->setUrlHelper($homepage);
         parent::__construct(['base_url' => $this->baseUrl]);
-        $this->httpServer = new SatisHttpServerInfo();
+        $this->httpServer = is_null($httpServer) ? new SatisHttpServerInfo() : $httpServer;
+        $this->checkServer();
     }
 
     /**
@@ -141,6 +148,15 @@ class SatisHttpClient extends Client
         return ''.$this->lastBody;
     }
 
+    public function checkServer()
+    {
+        if (is_null($this->credentials['auth']) xor !$this->httpServer->isPrivate()) {
+            throw new \Exception('Error Initializing SatisHttpClient (auth problem)', 4);
+        }
+
+        return true;
+    }
+
     /**
      * Get a file from homepage url.
      *
@@ -196,7 +212,10 @@ class SatisHttpClient extends Client
                 $this->lastStatus = $response->getStatusCode();
                 $this->lastBody = ''.$response->getBody();
             } else {
-                throw new \Exception('Error Processing PUT Request of '.$file.' (not allowed files or sub-directories)', 1);
+                throw new \Exception(
+                    'Error Processing PUT Request of '.$file.' (not allowed files or sub-directories)',
+                    1
+                );
             }
         } catch (ClientException $e) {
             if (preg_match('{403 Forbidden}', $e->getResponse())) {
@@ -224,7 +243,7 @@ class SatisHttpClient extends Client
      */
     public function putBundleZip($zip = 'build.zip')
     {
-        if (file_exists($zip) && $zipContents = file_get_contents($zip)) {
+        if ($this->httpServer->isBundled() && file_exists($zip) && $zipContents = file_get_contents($zip)) {
             $this->putFile(basename($zip), $zipContents, array('X-Explode-Archive' => 'true'));
         } else {
             throw new \Exception('Error Processing PUT Request of '.$zip.' (zip problem)', 2);
