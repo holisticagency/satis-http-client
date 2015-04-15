@@ -211,12 +211,14 @@ class SatisHttpClient extends Client
                 ));
                 $this->lastStatus = $response->getStatusCode();
                 $this->lastBody = ''.$response->getBody();
-            } else {
-                throw new \Exception(
-                    'Error Processing PUT Request of '.$file.' (not allowed files or sub-directories)',
-                    1
-                );
+
+                return $this;
             }
+
+            throw new \Exception(
+                'Error Processing PUT Request of '.$file.' (not allowed files or sub-directories)',
+                1
+            );
         } catch (ClientException $e) {
             if (preg_match('{403 Forbidden}', $e->getResponse())) {
                 $this->lastStatus = self::FORBIDDEN;
@@ -245,11 +247,11 @@ class SatisHttpClient extends Client
     {
         if ($this->httpServer->isBundled() && file_exists($zip) && $zipContents = file_get_contents($zip)) {
             $this->putFile(basename($zip), $zipContents, array('X-Explode-Archive' => 'true'));
-        } else {
-            throw new \Exception('Error Processing PUT Request of '.$zip.' (zip problem)', 2);
+
+            return $this;
         }
 
-        return $this;
+        throw new \Exception('Error Processing PUT Request of '.$zip.' (zip problem)', 2);
     }
 
     /**
