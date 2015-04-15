@@ -14,7 +14,6 @@ namespace holisticagency\satis\utilities;
 use GuzzleHttp\Url;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
-use Symfony\Component\Finder\Finder;
 
 /**
  * Satis http client utilities.
@@ -29,20 +28,6 @@ class SatisHttpClient extends Client
     const FORBIDDEN = 403;
     const NOT_FOUND = 404;
     const NOT_ALLOWED = 405;
-
-    /**
-     * List of file extensions allowed to PUT.
-     *
-     * @var array
-     */
-    protected $allowedFiles = array('json', 'zip');
-
-    /**
-     * List of directories where it is allowed to PUT.
-     *
-     * @var array
-     */
-    protected $allowedDirectories = array('dist', 'include');
 
     /**
      * Host part of url.
@@ -81,6 +66,8 @@ class SatisHttpClient extends Client
      */
     private $lastBody;
 
+    private $httpServer;
+
     /**
      * Constructor.
      *
@@ -92,6 +79,7 @@ class SatisHttpClient extends Client
         $this->setCredentials($credentials);
         $this->setUrlHelper($homepage);
         parent::__construct(['base_url' => $this->baseUrl]);
+        $this->httpServer = new SatisHttpServerInfo();
     }
 
     /**
@@ -154,46 +142,6 @@ class SatisHttpClient extends Client
     }
 
     /**
-     * Check if a file is allowed to PUT based extension.
-     *
-     * @param string $file file pathname to check
-     *
-     * @return bool true if it is allowed
-     */
-    private function checkExtension($file)
-    {
-        $allowed = implode('|', $this->allowedFiles);
-        if (preg_match(',\.('.$allowed.')$,', $file)) {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * Check if a file is allowed to PUT based sub-directory.
-     *
-     * @param string $file file pathname to check
-     *
-     * @return bool true if it is allowed
-     */
-    private function checkDirectory($file)
-    {
-        $func = function ($path) {
-            return $path.'/';
-        };
-        $allowed = implode('|', array_map($func, $this->allowedDirectories));
-        if (preg_match(
-            ',^'.$this->basePath.'('.$allowed.')?'.quotemeta(basename(str_replace('\\', '/', $file))).'$,',
-            $this->basePath.str_replace('\\', '/', $file)
-        )) {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
      * Get a file from homepage url.
      *
      * @param string $file a file to GET
@@ -230,16 +178,14 @@ class SatisHttpClient extends Client
      * @param string $content the content a the file
      * @param array  $headers additional headers
      *
-     * @throws Exception if $file is not an allowed file
+     * @throws \Exception if $file is not an allowed file
      *
      * @return SatisHttpClient this SatisHttpClient Instance
      */
     public function putFile($file = 'satis.json', $content = '', $headers = array())
     {
         try {
-            if ($this->checkExtension($file) &&
-                $this->checkDirectory($file)
-            ) {
+            if ($this->httpServer->check($file, $this->basePath)) {
                 $response = $this->put($this->basePath.str_replace('\\', '/', $file), array_merge(
                     array(
                         'body' => $content,
@@ -272,7 +218,7 @@ class SatisHttpClient extends Client
      *
      * @param string $zip the set of files bundled in a zip archive
      *
-     * @throws Exception If $zip is not an archive zip file
+     * @throws \Exception If $zip is not an archive zip file
      *
      * @return SatisHttpClient this SatisHttpClient Instance
      */
@@ -292,18 +238,14 @@ class SatisHttpClient extends Client
      *
      * @param string $dir the set of files
      *
-     * @throws Exception if $dir is not a directory
+     * @throws \Exception if $dir is not a directory
      *
      * @return SatisHttpClient this SatisHttpClient Instance
      */
     public function putDir($dir)
     {
         if (is_dir($dir)) {
-            $allowedFiles = ',\.('.implode('|', $this->allowedFiles).')$,';
-            $allowedDirectories = ',^('.implode('|', $this->allowedDirectories).')?,';
-
-            $finder = new Finder();
-            $finder->files()->in($dir)->name($allowedFiles)->path($allowedDirectories);
+            $finder = $this->httpServer->find($dir);
 
             foreach ($finder as $file) {
                 if ($contents = $file->getContents()) {
@@ -314,7 +256,5 @@ class SatisHttpClient extends Client
             return $this;
         }
         throw new \Exception('Error Processing PUT Request of '.$dir.' (directory problem)', 3);
-
-        return $this;
     }
 }

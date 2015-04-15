@@ -30,8 +30,6 @@ class SatisHttpClientTest extends PHPUnit_Framework_TestCase
 
     protected $client;
 
-    protected $otherclient;
-
     protected function setUp()
     {
         $this->mocks = array(
@@ -87,76 +85,8 @@ EOT
         );
 
         $this->client = new SatisHttpClient('http://localhost:54715');
-        $this->otherclient = new SatisHttpClient('http://localhost/withpath/');
         $this->clientwithcreds1 = new SatisHttpClient('http://localhost/withpath/', array('user', 'pass'));
         $this->clientwithcreds2 = new SatisHttpClient('https://user:pass@localhost/withpath/');
-    }
-
-    public function checkExtensionsProvider()
-    {
-        return array(
-          array('test.json', true),
-          array('dist/some.zip', true),
-          array('test.JSON', false),
-          array('index.php', false),
-          array('index.html', false),
-        );
-    }
-
-    public function checkDirectoriesProvider()
-    {
-        return array(
-          array('satis.json', true),
-          array('dist/some.zip', true),
-          array('build.zip', true),
-          array('.hidden/satis.json', false),
-          array('include/all$c8233cd260af0878200d33532a634f58473ab51a.json', true),
-          array('/include/all.json', false),
-          array('anywhere/satis.json', false),
-          array('include/anywhere/satis.json', false),
-          array('anywhere/dist/satis.json', false),
-          array('../../../../satis.json', false),
-
-          //windows sub-directories
-          array('dist\some.zip', true),
-          array('include\all$c8233cd260af0878200d33532a634f58473ab51a.json', true),
-        );
-    }
-
-    /**
-     * @dataProvider checkExtensionsProvider
-     */
-    public function testCheckExtensions($file, $expected)
-    {
-        $reflection = new \ReflectionClass(get_class($this->client));
-        $method = $reflection->getMethod('checkExtension');
-        $method->setAccessible(true);
-
-        $this->assertEquals($expected, $method->invokeArgs($this->client, array($file)));
-    }
-
-    /**
-     * @dataProvider checkDirectoriesProvider
-     */
-    public function testCheckDirectories($file, $expected)
-    {
-        $reflection = new \ReflectionClass(get_class($this->client));
-        $method = $reflection->getMethod('checkDirectory');
-        $method->setAccessible(true);
-
-        $this->assertEquals($expected, $method->invokeArgs($this->client, array($file)));
-    }
-
-    /**
-     * @dataProvider checkDirectoriesProvider
-     */
-    public function testCheckDirectoriesWithPathInUrl($file, $expected)
-    {
-        $reflection = new \ReflectionClass(get_class($this->otherclient));
-        $method = $reflection->getMethod('checkDirectory');
-        $method->setAccessible(true);
-
-        $this->assertEquals($expected, $method->invokeArgs($this->otherclient, array($file)));
     }
 
     /**
