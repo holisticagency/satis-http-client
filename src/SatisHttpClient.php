@@ -148,6 +148,13 @@ class SatisHttpClient extends Client
         return ''.$this->lastBody;
     }
 
+    /**
+     * Check if client/server can talk together.
+     *
+     * @throws \Exception if misconfigured client/server
+     *
+     * @return bool true if client/server can talk together
+     */
     public function checkServer()
     {
         if (is_null($this->credentials['auth']) xor !$this->httpServer->isPrivate()) {

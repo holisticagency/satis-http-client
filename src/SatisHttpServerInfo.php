@@ -12,6 +12,7 @@
 namespace holisticagency\satis\utilities;
 
 use Symfony\Component\Finder\Finder;
+use Symfony\Component\Yaml\Yaml;
 
 /**
  * Satis http server information utilities.
@@ -194,5 +195,42 @@ class SatisHttpServerInfo
     public function isBundled()
     {
         return $this->acceptBundle;
+    }
+
+    /**
+     * Parse a yaml file to set this SatisHttpServerInfo Instance.
+     *
+     * @param string $file the yaml file to parse
+     *
+     * @api
+     *
+     * @return SatisHttpServerInfo this SatisHttpServerInfo Instance
+     */
+    public function parse($file)
+    {
+        $array = Yaml::parse(file_get_contents($file));
+        $this->acceptBundle = (bool) $array['acceptBundle'];
+        $this->needAuthentication = (bool) $array['needAuthentication'];
+        $this->allowedFiles = (array) $array['allowedFiles'];
+        $this->allowedDirectories = (array) $array['allowedDirectories'];
+
+        return $this;
+    }
+
+    /**
+     * Dump this SatisHttpServerInfo Instance as a yaml string.
+     *
+     * @api
+     *
+     * @return string yaml string
+     */
+    public function dump()
+    {
+        return Yaml::dump(array(
+            'acceptBundle'       => $this->acceptBundle,
+            'needAuthentication' => $this->needAuthentication,
+            'allowedFiles'       => $this->allowedFiles,
+            'allowedDirectories' => $this->allowedDirectories,
+        ));
     }
 }
