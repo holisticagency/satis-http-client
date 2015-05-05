@@ -13,6 +13,8 @@ namespace holisticagency\satis\Test;
 
 use PHPUnit_Framework_TestCase;
 use holisticagency\satis\utilities\SatisHttpServerInfo;
+use org\bovigo\vfs\vfsStream;
+use org\bovigo\vfs\vfsStreamWrapper;
 
 /**
  * ServerInfo Tests.
@@ -23,9 +25,29 @@ class SatisHttpServerInfoTest extends PHPUnit_Framework_TestCase
 {
     protected $httpServerInfo;
 
+    protected $root;
+
+    protected $virtualyaml;
+
     public function setUp()
     {
         $this->httpServerInfo = new SatisHttpServerInfo();
+
+        vfsStreamWrapper::register();
+        $root = vfsStream::newDirectory('cache');
+        vfsStreamWrapper::setRoot($root);
+
+        $file = vfsStream::newFile('repo1.yml');
+        $file->setContent('acceptBundle: false
+needAuthentication: true
+allowedFiles:
+    - json
+allowedDirectories:
+    - include
+');
+        $root->addChild($file);
+
+        $this->virtualyaml = vfsStream::url($root->getName().'/repo1.yml');
     }
 
     public function checkExtensionsProvider()
@@ -160,5 +182,29 @@ class SatisHttpServerInfoTest extends PHPUnit_Framework_TestCase
       $method->setAccessible(true);
 
       $this->assertEquals($expected, $method->invokeArgs($this->httpServerInfo, array($file)));
+    }
+
+    public function testParseYaml()
+    {
+      $this->httpServerInfo->parse($this->virtualyaml);
+
+      $this->assertTrue($this->httpServerInfo->isPrivate());
+      $this->assertFalse($this->httpServerInfo->check('dist/test.zip'));
+    }
+
+    public function testDumpYaml()
+    {
+      $this->assertEquals(
+        'acceptBundle: true
+needAuthentication: false
+allowedFiles:
+    - json
+    - zip
+allowedDirectories:
+    - dist
+    - include
+',
+        $this->httpServerInfo->dump()
+      );
     }
 }
