@@ -25,8 +25,6 @@ class SatisHttpServerInfoTest extends PHPUnit_Framework_TestCase
 {
     protected $httpServerInfo;
 
-    protected $root;
-
     protected $virtualyaml;
 
     public function setUp()
